@@ -1,3 +1,5 @@
+// src/components/AdminAddItemPage.js
+
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
@@ -17,11 +19,15 @@ function AdminAddItemPage() {
     affiliateLink: '',
     links: '',
     image: null,
+    type: 'Shirt', // Default value
+    gender: 'Unisex', // Default value
+    price: 'Under $50', // Default value
+    style: 'Casual', // Default value
   });
 
   const [error, setError] = useState('');
 
-  const { name, description, affiliateLink, links, image } = formData;
+  const { name, description, affiliateLink, links, image, type, gender, price, style } = formData;
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -37,7 +43,7 @@ function AdminAddItemPage() {
     e.preventDefault();
 
     // Front-end validation
-    if (!name || !description || !affiliateLink || !links || !image) {
+    if (!name || !description || !affiliateLink || !links || !image || !type || !gender || !price || !style) {
       setError('All fields are required.');
       toast.error('All fields are required.');
       return;
@@ -49,6 +55,10 @@ function AdminAddItemPage() {
     form.append('affiliateLink', affiliateLink);
     form.append('links', links); // Comma-separated URLs
     form.append('image', image);
+    form.append('type', type);
+    form.append('gender', gender);
+    form.append('price', price);
+    form.append('style', style);
 
     try {
       const res = await fetch('/api/admin/items/add', {
@@ -70,6 +80,10 @@ function AdminAddItemPage() {
           affiliateLink: '',
           links: '',
           image: null,
+          type: 'Shirt',
+          gender: 'Unisex',
+          price: 'Under $50',
+          style: 'Casual',
         });
         // Redirect after a short delay
         setTimeout(() => {
@@ -117,14 +131,14 @@ function AdminAddItemPage() {
       <Head>
         <title>Add Item | Trending Clothing</title>
       </Head>
-      <div className="flex items-center justify-center min-h-screen bg-dark-gradient">
-        <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-md p-8 rounded-lg shadow-lg w-full max-w-lg">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">Add a New Item</h2>
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 backdrop-filter backdrop-blur-md p-8 rounded-lg shadow-lg w-full max-w-lg transition-colors duration-300">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center transition-colors duration-300">Add a New Item</h2>
           {error && <p className="text-red-500 mb-4">{error}</p>}
           <form onSubmit={handleSubmit} encType="multipart/form-data">
             {/* Item Name */}
             <div className="mb-4">
-              <label htmlFor="name" className="block text-gray-300 mb-2">
+              <label htmlFor="name" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Item Name
               </label>
               <input
@@ -133,7 +147,7 @@ function AdminAddItemPage() {
                 id="name"
                 value={name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-opacity-10 backdrop-filter backdrop-blur-md text-black placeholder-gray-300"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 placeholder="Stylish Jacket"
                 required
               />
@@ -141,7 +155,7 @@ function AdminAddItemPage() {
 
             {/* Description */}
             <div className="mb-4">
-              <label htmlFor="description" className="block text-gray-300 mb-2">
+              <label htmlFor="description" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Description
               </label>
               <textarea
@@ -149,7 +163,7 @@ function AdminAddItemPage() {
                 id="description"
                 value={description}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-opacity-10 backdrop-filter backdrop-blur-md text-black placeholder-gray-300"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 placeholder="Provide a detailed description of the item."
                 rows="4"
                 required
@@ -158,7 +172,7 @@ function AdminAddItemPage() {
 
             {/* Affiliate Link */}
             <div className="mb-4">
-              <label htmlFor="affiliateLink" className="block text-gray-300 mb-2">
+              <label htmlFor="affiliateLink" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Affiliate Link
               </label>
               <input
@@ -167,7 +181,7 @@ function AdminAddItemPage() {
                 id="affiliateLink"
                 value={affiliateLink}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-opacity-10 backdrop-filter backdrop-blur-md text-black placeholder-gray-300"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 placeholder="https://www.example.com/product"
                 required
               />
@@ -175,7 +189,7 @@ function AdminAddItemPage() {
 
             {/* Purchase Links */}
             <div className="mb-4">
-              <label htmlFor="links" className="block text-gray-300 mb-2">
+              <label htmlFor="links" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Purchase Links (comma-separated)
               </label>
               <input
@@ -184,15 +198,96 @@ function AdminAddItemPage() {
                 id="links"
                 value={links}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-opacity-10 backdrop-filter backdrop-blur-md text-black placeholder-gray-300"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 placeholder="https://store1.com/item, https://store2.com/item"
                 required
               />
             </div>
 
+            {/* Type of Clothing */}
+            <div className="mb-4">
+              <label htmlFor="type" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
+                Type of Clothing
+              </label>
+              <select
+                name="type"
+                id="type"
+                value={type}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
+                required
+              >
+                <option value="Shirt">Shirt</option>
+                <option value="Pants">Pants</option>
+                <option value="Jacket">Jacket</option>
+                <option value="Dress">Dress</option>
+                <option value="Shoes">Shoes</option>
+                <option value="Accessories">Accessories</option>
+              </select>
+            </div>
+
+            {/* Gender */}
+            <div className="mb-4">
+              <label htmlFor="gender" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
+                Gender
+              </label>
+              <select
+                name="gender"
+                id="gender"
+                value={gender}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
+                required
+              >
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Unisex">Unisex</option>
+              </select>
+            </div>
+
+            {/* Price */}
+            <div className="mb-4">
+              <label htmlFor="price" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
+                Price Range
+              </label>
+              <select
+                name="price"
+                id="price"
+                value={price}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
+                required
+              >
+                <option value="Under $50">Under $50</option>
+                <option value="$50-$100">$50-$100</option>
+                <option value="Over $100">Over $100</option>
+              </select>
+            </div>
+
+            {/* Style */}
+            <div className="mb-6">
+              <label htmlFor="style" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
+                Style
+              </label>
+              <select
+                name="style"
+                id="style"
+                value={style}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
+                required
+              >
+                <option value="Casual">Casual</option>
+                <option value="Formal">Formal</option>
+                <option value="Sport">Sport</option>
+                <option value="Vintage">Vintage</option>
+                <option value="Streetwear">Streetwear</option>
+              </select>
+            </div>
+
             {/* Image Upload */}
             <div className="mb-6">
-              <label htmlFor="image" className="block text-gray-300 mb-2">
+              <label htmlFor="image" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
                 Item Image
               </label>
               <input
@@ -201,7 +296,7 @@ function AdminAddItemPage() {
                 id="image"
                 accept="image/*"
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white bg-opacity-10 backdrop-filter backdrop-blur-md text-black"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 required
               />
             </div>
@@ -209,7 +304,7 @@ function AdminAddItemPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+              className="w-full bg-green-500 dark:bg-green-700 hover:bg-green-600 dark:hover:bg-green-800 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300"
             >
               Add Item
             </button>

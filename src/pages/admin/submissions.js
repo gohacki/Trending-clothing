@@ -45,16 +45,45 @@ function AdminSubmissionsPage() {
   const handleDecision = async (itemId, decision) => {
     try {
       let affiliateLink = '';
+      let type = '';
+      let gender = '';
+      let price = '';
+      let style = '';
 
       if (decision === 'approve') {
+        // Prompt admin for affiliate link and new fields
         affiliateLink = prompt('Please enter the affiliate link for this item:');
         if (!affiliateLink) {
           toast.error('Affiliate link is required to approve the item.');
           return;
         }
+
+        type = prompt('Enter the type of clothing (Shirt, Pants, Jacket, Dress, Shoes, Accessories):');
+        if (!['Shirt', 'Pants', 'Jacket', 'Dress', 'Shoes', 'Accessories'].includes(type)) {
+          toast.error('Invalid type of clothing.');
+          return;
+        }
+
+        gender = prompt('Enter the gender (Male, Female, Unisex):');
+        if (!['Male', 'Female', 'Unisex'].includes(gender)) {
+          toast.error('Invalid gender.');
+          return;
+        }
+
+        price = prompt('Enter the price range (Under $50, $50-$100, Over $100):');
+        if (!['Under $50', '$50-$100', 'Over $100'].includes(price)) {
+          toast.error('Invalid price range.');
+          return;
+        }
+
+        style = prompt('Enter the style (Casual, Formal, Sport, Vintage, Streetwear):');
+        if (!['Casual', 'Formal', 'Sport', 'Vintage', 'Streetwear'].includes(style)) {
+          toast.error('Invalid style.');
+          return;
+        }
       }
 
-      const body = decision === 'approve' ? { affiliateLink } : {};
+      const body = decision === 'approve' ? { affiliateLink, type, gender, price, style } : {};
 
       const res = await fetch(`/api/admin/submissions/${itemId}/${decision}`, {
         method: 'POST',
@@ -118,9 +147,9 @@ function AdminSubmissionsPage() {
         </Link>
         {submissions.length > 0 ? (
           submissions.map((item) => (
-            <div key={item._id} className="submission-card flex items-center bg-white bg-opacity-10 backdrop-filter backdrop-blur-md shadow-md rounded p-4 mb-4 w-full max-w-4xl">
+            <div key={item._id} className="submission-card flex items-center bg-white bg-opacity-10 backdrop-filter backdrop-blur-md shadow-md rounded p-4 mb-4 w-full max-w-4xl transition-colors duration-300 dark:bg-gray-700">
               {/* Item Image */}
-              <div className="relative w-24 h-24 flex-shrink-0">
+              <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
                 <Image src={item.image} alt={item.name} fill className="rounded object-cover" />
               </div>
 

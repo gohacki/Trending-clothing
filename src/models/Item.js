@@ -42,6 +42,27 @@ const ItemSchema = new mongoose.Schema(
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
+    // **New Fields**
+    type: {
+      type: String,
+      enum: ['Shirt', 'Pants', 'Jacket', 'Dress', 'Shoes', 'Accessories'],
+      required: [true, 'Please specify the type of clothing.'],
+    },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Unisex'],
+      required: [true, 'Please specify the gender.'],
+    },
+    price: {
+      type: String,
+      enum: ['Under $50', '$50-$100', 'Over $100'],
+      required: [true, 'Please specify the price range.'],
+    },
+    style: {
+      type: String,
+      enum: ['Casual', 'Formal', 'Sport', 'Vintage', 'Streetwear'],
+      required: [true, 'Please specify the style.'],
+    },
   },
   { timestamps: true }
 );

@@ -38,10 +38,10 @@ export default withAdmin(async function handler(req, res) {
     }
 
     if (decision === 'approve') {
-      const { affiliateLink } = req.body;
+      const { affiliateLink, type, gender, price, style } = req.body;
 
-      if (!affiliateLink) {
-        return res.status(400).json({ success: false, message: 'Affiliate link is required to approve the item.' });
+      if (!affiliateLink || !type || !gender || !price || !style) {
+        return res.status(400).json({ success: false, message: 'All fields are required to approve the item.' });
       }
 
       // Validate affiliateLink (basic URL validation)
@@ -55,7 +55,34 @@ export default withAdmin(async function handler(req, res) {
         return res.status(400).json({ success: false, message: 'Invalid affiliate link URL.' });
       }
 
+      // Validate enumerated fields
+      const validTypes = ['Shirt', 'Pants', 'Jacket', 'Dress', 'Shoes', 'Accessories'];
+      const validGenders = ['Male', 'Female', 'Unisex'];
+      const validPrices = ['Under $50', '$50-$100', 'Over $100'];
+      const validStyles = ['Casual', 'Formal', 'Sport', 'Vintage', 'Streetwear'];
+
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({ success: false, message: 'Invalid type of clothing.' });
+      }
+
+      if (!validGenders.includes(gender)) {
+        return res.status(400).json({ success: false, message: 'Invalid gender.' });
+      }
+
+      if (!validPrices.includes(price)) {
+        return res.status(400).json({ success: false, message: 'Invalid price range.' });
+      }
+
+      if (!validStyles.includes(style)) {
+        return res.status(400).json({ success: false, message: 'Invalid style.' });
+      }
+
+      // Update item fields
       item.affiliateLink = affiliateLink;
+      item.type = type;
+      item.gender = gender;
+      item.price = price;
+      item.style = style;
       item.status = 'approved';
     } else if (decision === 'reject') {
       item.status = 'rejected';

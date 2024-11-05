@@ -10,7 +10,7 @@ import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
-function ItemCard({ item, searchTerm, wardrobeIds }) {
+function ItemCard({ item, searchTerm, wardrobeIds, rank }) { // Added 'rank' prop
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated";
   const [inWardrobe, setInWardrobe] = useState(isAuthenticated ? wardrobeIds.includes(item._id) : false);
@@ -150,7 +150,12 @@ function ItemCard({ item, searchTerm, wardrobeIds }) {
 
   return (
     <>
-      <div className="item-card flex flex-col md:flex-row items-center bg-white bg-opacity-10 backdrop-filter backdrop-blur-md shadow-lg rounded-lg p-6 mb-6 w-full max-w-4xl transform transition duration-300 hover:scale-105 hover:shadow-2xl dark:bg-gray-700">
+      <Link href={`/item/${item._id}`} className="item-card flex flex-col md:flex-row items-center bg-white bg-opacity-10 backdrop-filter backdrop-blur-md shadow-lg rounded-lg p-6 mb-6 w-full max-w-4xl transform transition duration-300 hover:scale-105 hover:shadow-2xl dark:bg-gray-700">
+        {/* Rank */}
+        <div className="rank mr-0 md:mr-4 text-2xl font-bold text-yellow-400">
+          {rank}
+        </div>
+
         {/* Item Image */}
         <div className="relative w-full md:w-1/3 h-48 flex-shrink-0 rounded-lg overflow-hidden">
           <Image
@@ -181,7 +186,7 @@ function ItemCard({ item, searchTerm, wardrobeIds }) {
                 className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors duration-200 ${
                   (isVoting || hasVoted) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                 }`}
-                aria-label={isVoting ? "Voting" : "Upvote"}
+                aria-label={isVoting ? "Voting" : hasVoted ? "Voted" : "Upvote"}
               >
                 {isVoting ? "Voting..." : hasVoted ? "Voted" : "Upvote"}
               </button>
@@ -211,7 +216,13 @@ function ItemCard({ item, searchTerm, wardrobeIds }) {
             </button>
           </div>
         </div>
-      </div>
+
+        {/* Votes Count on the Right */}
+        <div className="votes mt-4 md:mt-0 ml-0 md:ml-4 text-3xl font-bold text-red-500">
+          {votes}
+        </div>
+        
+        </Link>
       <ToastContainer />
     </>
   );
@@ -219,7 +230,11 @@ function ItemCard({ item, searchTerm, wardrobeIds }) {
 
 // Component to highlight search terms
 function HighlightText({ text, highlight }) {
-  const parts = text.split(new RegExp(`(${highlight})`, "gi"));
+  if (!highlight) return text;
+
+  const regex = new RegExp(`(${highlight})`, 'gi');
+  const parts = text.split(regex);
+
   return (
     <>
       {parts.map((part, i) =>

@@ -33,11 +33,11 @@ async function handler(req, res) {
   await runMiddleware(req, res, upload.single('image'));
 
   try {
-    const { name, description, affiliateLink, links } = req.body;
+    const { name, description, affiliateLink, links, type, gender, price, style } = req.body;
     const file = req.file;
 
     // Validate input
-    if (!name || !description || !affiliateLink || !links || !file) {
+    if (!name || !description || !affiliateLink || !links || !file || !type || !gender || !price || !style) {
       return res.status(400).json({ success: false, message: 'All fields are required.' });
     }
 
@@ -84,6 +84,10 @@ async function handler(req, res) {
       links: linksArray,
       affiliateLink,
       status: 'approved',
+      type,
+      gender,
+      price,
+      style,
     });
 
     return res.status(201).json({
