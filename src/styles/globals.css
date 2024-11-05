@@ -1,0 +1,57 @@
+/* src/styles/globals.css */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/700.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base Styles */
+body {
+  @apply bg-dark-gradient text-white font-inter transition-colors duration-300;
+}
+
+/* Dark mode specific styles */
+.dark body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+/* Adjust component styles for dark mode */
+.dark .bg-white {
+  @apply bg-gray-800;
+}
+
+.dark .text-gray-300 {
+  @apply text-gray-400;
+}
+
+/* Add dark mode styles for buttons */
+.dark .btn {
+  @apply bg-gray-700 text-white;
+}
+
+.btn {
+  @apply bg-white text-gray-800;
+}
+
+/* Add dark mode styles for inputs */
+.dark .input {
+  @apply bg-gray-800 text-white border-gray-700;
+}
+
+.input {
+  @apply bg-white text-gray-800 border-gray-300;
+}
+
+/* Add dark mode styles for links */
+.dark a {
+  @apply text-blue-400 hover:text-blue-600;
+}
+
+a {
+  @apply text-blue-600 hover:text-blue-800;
+}
+
+/* Smooth transitions for interactive elements */
+.btn, .input, a {
+  @apply transition-colors duration-300;
+}
