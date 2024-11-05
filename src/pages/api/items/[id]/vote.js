@@ -8,7 +8,6 @@ import { rateLimiter } from "../../../../middleware/rateLimit";
 import { runMiddleware } from "../../../../lib/runMiddleware";
 import { ensureAnonymousId } from "../../../../middleware/ensureAnonymousId";
 import { ensureSessionId } from "../../../../middleware/ensureSessionId";
-import axios from 'axios';
 
 export default async function handler(req, res) {
   const { method } = req;
@@ -28,23 +27,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // CAPTCHA Verification
-    const { captchaToken, fingerprint } = req.body;
-    if (!captchaToken) {
-      return res.status(400).json({ success: false, message: "CAPTCHA token is missing." });
-    }
-
-    // Verify CAPTCHA with Google
-    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-    const verificationURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captchaToken}`;
-
-    const captchaResponse = await axios.post(verificationURL);
-    const { success, score } = captchaResponse.data;
-
-    if (!success || (score && score < 0.5)) { // Adjust score threshold as needed
-      return res.status(400).json({ success: false, message: "Failed CAPTCHA verification." });
-    }
-
     // Connect to database
     await dbConnect();
 
@@ -72,7 +54,11 @@ export default async function handler(req, res) {
       const sessionId = await ensureSessionId(req, res);
       voteCriteria.anonymousId = anonymousId;
       voteCriteria.sessionId = sessionId;
-      voteCriteria.fingerprint = fingerprint;
+      // Removed fingerprint usage as it's no longer associated with reCAPTCHA
+      // If fingerprinting is still required for other purposes, you can retain it
+      // For example:
+      // const fingerprint = req.body.fingerprint;
+      // voteCriteria.fingerprint = fingerprint;
     }
 
     // Check if a vote already exists

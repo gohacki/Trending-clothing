@@ -11,7 +11,7 @@ import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
-import ReCAPTCHA from 'react-google-recaptcha';
+// Removed: import ReCAPTCHA from 'react-google-recaptcha';
 
 function ItemDetailPage({ item }) {
   const router = useRouter();
@@ -22,8 +22,8 @@ function ItemDetailPage({ item }) {
   const [votes, setVotes] = useState(item.votes);
   const [isVoting, setIsVoting] = useState(false);
   const [fingerprint, setFingerprint] = useState(null);
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const recaptchaRef = useRef(null);
+  // Removed: const [captchaToken, setCaptchaToken] = useState(null);
+  // Removed: const recaptchaRef = useRef(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -107,13 +107,13 @@ function ItemDetailPage({ item }) {
     setIsVoting(true);
 
     try {
-      if (!isAuthenticated && recaptchaRef.current) {
-        const token = await recaptchaRef.current.executeAsync();
-        setCaptchaToken(token);
-      }
+      // Removed reCAPTCHA logic
+      // const token = await recaptchaRef.current.executeAsync();
+      // setCaptchaToken(token);
+      // recaptchaRef.current.reset();
 
       const payload = {
-        ...(isAuthenticated ? {} : { captchaToken }),
+        ...(isAuthenticated ? {} : {}),
         ...(fingerprint ? { fingerprint } : {}),
       };
 
@@ -161,6 +161,7 @@ function ItemDetailPage({ item }) {
 
   return (
     <>
+      {/* Removed reCAPTCHA component */}
       <Head>
         <title>{item.name} | Trending Clothing</title>
         <meta name="description" content={item.description} />
@@ -230,15 +231,6 @@ function ItemDetailPage({ item }) {
             {wardrobeLoading ? "Processing..." : inWardrobe ? "Remove from Wardrobe" : "Add to Wardrobe"}
           </button>
         </div>
-
-        {/* Invisible reCAPTCHA for unauthenticated users */}
-        {!isAuthenticated && (
-          <ReCAPTCHA
-            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-            size="invisible"
-            ref={recaptchaRef}
-          />
-        )}
         <ToastContainer />
       </div>
     </>

@@ -68,7 +68,7 @@ function Navbar() {
             <span className="text-gray-800 dark:text-gray-200">Hello, {session.user.name}</span>
             <button
               onClick={() => signOut()}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+              className= "text-gray-800 dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 transition-colors duration-200"
             >
               Sign Out
             </button>

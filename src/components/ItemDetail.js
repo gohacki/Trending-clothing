@@ -1,6 +1,5 @@
 // src/pages/item/[id].js
 
-import ReCAPTCHA from 'react-google-recaptcha';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -21,9 +20,7 @@ function ItemDetailPage({ item }) {
   const [wardrobeLoading, setWardrobeLoading] = useState(false);
   const [votes, setVotes] = useState(item.votes);
   const [isVoting, setIsVoting] = useState(false);
-  const recaptchaRef = useRef(null);
   const [fingerprint, setFingerprint] = useState(null);
-  const [captchaToken, setCaptchaToken] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -45,14 +42,12 @@ function ItemDetailPage({ item }) {
       // For unauthenticated users, you might skip wardrobe functionality
       setInWardrobe(false);
     }
-  }, [isAuthenticated, item._id]);
 
-  useEffect(() => {
     // Initialize FingerprintJS
     FingerprintJS.load().then(fp => fp.get()).then(result => {
       setFingerprint(result.visitorId);
     });
-  }, []);
+  }, [isAuthenticated, item._id]);
 
   const handleWardrobeToggle = async () => {
     if (!isAuthenticated) {
@@ -104,39 +99,14 @@ function ItemDetailPage({ item }) {
     }
   };
 
-  if (!item) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-dark-gradient text-gray-300">
-        <p className="text-xl mb-4">Item not found</p>
-        <button
-          onClick={() => router.push("/")}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
-        >
-          Go Back Home
-        </button>
-      </div>
-    );
-  }
-
-  const handleBack = () => {
-    router.back();
-  };
-
   const handleVote = async () => {
     if (isVoting) return;
 
     setIsVoting(true);
 
     try {
-      if (!isAuthenticated && recaptchaRef.current) {
-        const token = await recaptchaRef.current.executeAsync();
-        setCaptchaToken(token);
-        recaptchaRef.current.reset();
-      }
-
       const payload = {
-        ...(isAuthenticated ? {} : { captchaToken }),
-        ...(fingerprint ? { fingerprint } : {}),
+        ...(isAuthenticated ? {} : { fingerprint }),
       };
 
       const res = await fetch(`/api/items/${item._id}/vote`, {
@@ -163,17 +133,26 @@ function ItemDetailPage({ item }) {
     }
   };
 
+  if (!item) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-dark-gradient text-gray-300">
+        <p className="text-xl mb-4">Item not found</p>
+        <button
+          onClick={() => router.push("/")}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
+        >
+          Go Back Home
+        </button>
+      </div>
+    );
+  }
+
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
     <>
-      {/* ... other components and JSX */}
-      {/* Invisible reCAPTCHA for unauthenticated users */}
-      {!isAuthenticated && (
-        <ReCAPTCHA
-          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-          size="invisible"
-          ref={recaptchaRef}
-        />
-      )}
       <Head>
         <title>{item.name} | Trending Clothing</title>
         <meta name="description" content={item.description} />

@@ -1,13 +1,12 @@
 // src/pages/submit.js
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import ReCAPTCHA from 'react-google-recaptcha';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 
 function SubmitItemPage() {
@@ -24,8 +23,6 @@ function SubmitItemPage() {
 
   const [error, setError] = useState('');
   const [fingerprint, setFingerprint] = useState(null);
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const recaptchaRef = useRef(null);
 
   useEffect(() => {
     // Initialize FingerprintJS
@@ -48,31 +45,19 @@ function SubmitItemPage() {
     e.preventDefault();
 
     // Front-end validation
-    if (!name || !description || !links || !image) {
+    if (!formData.name || !formData.description || !formData.links || !formData.image) {
       setError('All fields are required.');
       toast.error('All fields are required.');
       return;
     }
 
     const form = new FormData();
-    form.append('name', name);
-    form.append('description', description);
-    form.append('links', links); // Comma-separated URLs
-    form.append('image', image);
+    form.append('name', formData.name);
+    form.append('description', formData.description);
+    form.append('links', formData.links); // Comma-separated URLs
+    form.append('image', formData.image);
 
     try {
-      // Execute reCAPTCHA for unauthenticated users
-      if (!isAuthenticated && recaptchaRef.current) {
-        const token = await recaptchaRef.current.executeAsync();
-        setCaptchaToken(token);
-        recaptchaRef.current.reset();
-      }
-
-      const payload = {
-        ...(isAuthenticated ? {} : { captchaToken }),
-        ...(fingerprint ? { fingerprint } : {}),
-      };
-
       const res = await fetch('/api/items/submit', {
         method: 'POST',
         body: form,
@@ -139,7 +124,7 @@ function SubmitItemPage() {
                 type="text"
                 name="name"
                 id="name"
-                value={name}
+                value={formData.name}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 placeholder="Stylish Jacket"
@@ -155,7 +140,7 @@ function SubmitItemPage() {
               <textarea
                 name="description"
                 id="description"
-                value={description}
+                value={formData.description}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 placeholder="Provide a detailed description of the item."
@@ -173,7 +158,7 @@ function SubmitItemPage() {
                 type="text"
                 name="links"
                 id="links"
-                value={links}
+                value={formData.links}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
                 placeholder="https://store1.com/item, https://store2.com/item"
@@ -205,14 +190,6 @@ function SubmitItemPage() {
               Submit Item
             </button>
           </form>
-          {/* Invisible reCAPTCHA for unauthenticated users */}
-          {!isAuthenticated && (
-            <ReCAPTCHA
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-              size="invisible"
-              ref={recaptchaRef}
-            />
-          )}
           <ToastContainer />
         </div>
       </div>

@@ -1,4 +1,4 @@
-// src/lib/mongodb.js
+// src/lib/mongoose.js
 
 import mongoose from "mongoose";
 

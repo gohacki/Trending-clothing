@@ -1,6 +1,6 @@
 // src/components/ItemCard.js
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -9,7 +9,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
-import ReCAPTCHA from 'react-google-recaptcha';
 
 function ItemCard({ item, searchTerm, wardrobeIds }) {
   const { data: session, status } = useSession();
@@ -20,9 +19,7 @@ function ItemCard({ item, searchTerm, wardrobeIds }) {
   const [isVoting, setIsVoting] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // For skeleton loader
   const [fingerprint, setFingerprint] = useState(null);
-  const [captchaToken, setCaptchaToken] = useState(null);
   const [hasVoted, setHasVoted] = useState(false); // Define hasVoted state
-  const recaptchaRef = useRef(null);
 
   useEffect(() => {
     // Initialize FingerprintJS
@@ -102,15 +99,8 @@ function ItemCard({ item, searchTerm, wardrobeIds }) {
     setIsVoting(true);
 
     try {
-      if (!isAuthenticated && recaptchaRef.current) {
-        const token = await recaptchaRef.current.executeAsync();
-        setCaptchaToken(token);
-        recaptchaRef.current.reset();
-      }
-
       const payload = {
-        ...(isAuthenticated ? {} : { captchaToken }),
-        ...(fingerprint ? { fingerprint } : {}),
+        ...(isAuthenticated ? {} : { fingerprint }),
       };
 
       const res = await fetch(`/api/items/${item._id}/vote`, {
@@ -222,14 +212,6 @@ function ItemCard({ item, searchTerm, wardrobeIds }) {
           </div>
         </div>
       </div>
-      {/* Invisible reCAPTCHA */}
-      {!isAuthenticated && (
-        <ReCAPTCHA
-          sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-          size="invisible"
-          ref={recaptchaRef}
-        />
-      )}
       <ToastContainer />
     </>
   );
