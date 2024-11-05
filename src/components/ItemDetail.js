@@ -1,16 +1,13 @@
 // src/components/ItemDetail.js
-
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import dbConnect from "../../lib/mongoose";
-import Item from "../../models/Item";
 import Head from "next/head";
-import Link from "next/link";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import EditItemModal from "./EditItemModal";
 
 function ItemDetailPage({ item }) {
   const router = useRouter();
@@ -18,13 +15,13 @@ function ItemDetailPage({ item }) {
   const isAuthenticated = status === "authenticated";
   const [inWardrobe, setInWardrobe] = useState(false);
   const [wardrobeLoading, setWardrobeLoading] = useState(false);
-  const [votes, setVotes] = useState(item.votes);
+  const [votes, setVotes] = useState(item ? item.votes : 0);
   const [isVoting, setIsVoting] = useState(false);
   const [fingerprint, setFingerprint] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Fetch the user's wardrobe to check if the item is already there
       const fetchWardrobe = async () => {
         try {
           const res = await fetch('/api/wardrobe');
@@ -39,15 +36,13 @@ function ItemDetailPage({ item }) {
       };
       fetchWardrobe();
     } else {
-      // For unauthenticated users, you might skip wardrobe functionality
       setInWardrobe(false);
     }
 
-    // Initialize FingerprintJS
     FingerprintJS.load().then(fp => fp.get()).then(result => {
       setFingerprint(result.visitorId);
     });
-  }, [isAuthenticated, item._id]);
+  }, [isAuthenticated, item?._id]);
 
   const handleWardrobeToggle = async () => {
     if (!isAuthenticated) {
@@ -174,8 +169,8 @@ function ItemDetailPage({ item }) {
             fill
             className="object-cover rounded"
             sizes="(max-width: 768px) 100vw,
-                  (max-width: 1200px) 50vw,
-                  33vw"
+                   (max-width: 1200px) 50vw,
+                   33vw"
             priority // Ensures this image loads quickly
             onError={(e) => {
               e.target.onerror = null;
@@ -225,9 +220,61 @@ function ItemDetailPage({ item }) {
             {wardrobeLoading ? "Processing..." : inWardrobe ? "Remove from Wardrobe" : "Add to Wardrobe"}
           </button>
         </div>
+
+        {/* Admin Controls */}
+        {isAuthenticated && session.user.role === 'admin' && (
+          <div className="mt-6 flex space-x-4">
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Edit Item
+            </button>
+            <button
+              onClick={async () => {
+                if (confirm('Are you sure you want to remove this item? This action cannot be undone.')) {
+                  try {
+                    const res = await fetch(`/api/admin/items/${item._id}/remove`, {
+                      method: 'DELETE',
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      toast.success(data.message || 'Item removed successfully!');
+                      router.push('/'); // Redirect to home or admin submissions
+                    } else {
+                      toast.error(data.message || 'Failed to remove item.');
+                    }
+                  } catch (error) {
+                    console.error("Error removing item:", error);
+                    toast.error('An error occurred while removing the item.');
+                  }
+                }
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              Remove Item
+            </button>
+          </div>
+        )}
+
         <ToastContainer />
       </div>
+
+      {/* Edit Item Modal */}
+      {isEditModalOpen && (
+        <EditItemModal
+          item={item}
+          onClose={() => setIsEditModalOpen(false)}
+          onUpdate={(updatedItem) => {
+            // Update local state with updated item details
+            // You might want to re-fetch the item or update state accordingly
+            router.replace(router.asPath);
+            toast.success('Item updated successfully!');
+          }}
+        />
+      )}
     </>
+
   );
 }
 

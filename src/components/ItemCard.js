@@ -149,85 +149,103 @@ function ItemCard({ item, searchTerm, wardrobeIds, rank }) { // Added 'rank' pro
   }
 
   return (
-    <>
-      <Link href={`/item/${item._id}`} className="item-card flex flex-col md:flex-row items-center bg-white bg-opacity-10 backdrop-filter backdrop-blur-md shadow-lg rounded-lg p-6 mb-6 w-full max-w-4xl transform transition duration-300 hover:scale-105 hover:shadow-2xl dark:bg-gray-700">
-        {/* Rank */}
-        <div className="rank mr-0 md:mr-4 text-2xl font-bold text-yellow-400">
-          {rank}
-        </div>
+    <div className="item-card flex flex-col md:flex-row items-center bg-white bg-opacity-10 backdrop-filter backdrop-blur-md shadow-lg rounded-lg p-6 mb-6 w-full max-w-4xl h-64 transform transition duration-300 hover:scale-105 hover:shadow-2xl dark:bg-gray-700">
+      {/* Rank */}
+      <div className="rank mr-0 md:mr-4 text-2xl font-bold text-yellow-400">
+        {rank}
+      </div>
 
-        {/* Item Image */}
-        <div className="relative w-full md:w-1/3 h-48 flex-shrink-0 rounded-lg overflow-hidden">
+      {/* Item Image */}
+      <div className="relative w-full md:w-1/3 h-full flex-shrink-0 overflow-hidden">
+        <Link href={`/item/${item._id}`}>
           <Image
             src={item.image} // CDN URL
             alt={item.name}
-            layout="fill"
-            objectFit="cover"
             className="rounded-lg"
+            fill
+            style={{ objectFit: 'cover' }}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-        </div>
+        </Link>
+      </div>
 
-        {/* Item Details */}
-        <div className="mt-4 md:mt-0 md:ml-6 flex-grow">
-          <Link href={`/item/${item._id}`} className="text-2xl font-semibold text-gray-800 dark:text-white hover:underline">
-              {searchTerm ? (
-                <HighlightText text={item.name} highlight={searchTerm} />
-              ) : (
-                item.name
-              )}
-          </Link>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">{item.description}</p>
-          <div className="mt-4 flex flex-wrap items-center space-x-4">
-            {/* Upvote Button and Vote Count */}
-            <div className="flex items-center">
-              <button
-                onClick={handleVote}
-                disabled={isVoting || hasVoted}
-                className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors duration-200 ${
-                  (isVoting || hasVoted) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-                }`}
-                aria-label={isVoting ? "Voting" : hasVoted ? "Voted" : "Upvote"}
-              >
-                {isVoting ? "Voting..." : hasVoted ? "Voted" : "Upvote"}
-              </button>
-              <span className="ml-3 text-lg text-gray-700 dark:text-gray-300">{votes} votes</span>
-            </div>
+      {/* Item Details */}
+      <div className="mt-4 md:mt-0 md:ml-6 flex-grow h-full flex flex-col justify-between">
+        <Link href={`/item/${item._id}`} className="text-2xl font-semibold text-gray-800 dark:text-white hover:underline">
+          {searchTerm ? (
+            <HighlightText text={item.name} highlight={searchTerm} />
+          ) : (
+            item.name
+          )}
+        </Link>
+        <p className="text-gray-600 dark:text-gray-300 mt-2">{item.description}</p>
 
-            {/* Buy Now Buttons */}
-            {item.buyNowLinks && item.buyNowLinks.map((link, index) => (
-              <a
+        <div className="mt-4 flex flex-wrap items-center space-x-4">
+          {/* Upvote Button and Vote Count */}
+          <div className="flex items-center">
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent navigation
+                handleVote();
+              }}
+              disabled={isVoting || hasVoted}
+              className={`bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 transition-colors duration-200 ${
+                (isVoting || hasVoted) ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+              }`}
+              aria-label={isVoting ? "Voting" : hasVoted ? "Voted" : "Upvote"}
+            >
+              {isVoting ? "Voting..." : hasVoted ? "Voted" : "Upvote"}
+            </button>
+            <span className="ml-3 text-lg text-gray-700 dark:text-gray-300">{votes} votes</span>
+          </div>
+
+          {/* Buy Now Buttons */}
+          {item.buyNowLinks &&
+            item.buyNowLinks.map((link, index) => (
+              <Link
                 key={index}
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                onClick={(e) => e.stopPropagation()} // Prevent navigation
               >
                 Buy Now at {link.siteName}
-              </a>
+              </Link>
             ))}
 
-            {/* Wardrobe Button */}
-            <button
-              onClick={handleWardrobeToggle}
-              disabled={wardrobeLoading}
-              className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200 ${
-                wardrobeLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-              }`}
-              aria-label={inWardrobe ? "Remove from Wardrobe" : "Add to Wardrobe"}
-            >
-              {wardrobeLoading ? "Processing..." : inWardrobe ? "Remove" : "Add"}
-            </button>
-          </div>
-        </div>
+          {/* Wardrobe Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent navigation
+              handleWardrobeToggle();
+            }}
+            disabled={wardrobeLoading}
+            className={`bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors duration-200 ${
+              wardrobeLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            }`}
+            aria-label={inWardrobe ? "Remove from Wardrobe" : "Add to Wardrobe"}
+          >
+            {wardrobeLoading ? "Processing..." : inWardrobe ? "Remove" : "Add"}
+          </button>
 
-        {/* Votes Count on the Right */}
-        <div className="votes mt-4 md:mt-0 ml-0 md:ml-4 text-3xl font-bold text-red-500">
-          {votes}
+          {/* View Details Button */}
+          <Link
+            href={`/item/${item._id}`}
+            className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+            View Details
+          </Link>
         </div>
-        
-        </Link>
+      </div>
+
+      {/* Votes Count on the Right */}
+      <div className="votes mt-4 md:mt-0 ml-0 md:ml-4 text-3xl font-bold text-red-500">
+        {votes}
+      </div>
+
       <ToastContainer />
-    </>
+    </div>
   );
 }
 

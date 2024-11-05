@@ -1,13 +1,12 @@
 // src/pages/api/admin/items/[id]/remove.js
 
-import dbConnect from '../../../../lib/mongoose';
-import Item from '../../../../models/Item';
+import dbConnect from '../../../../../lib/mongoose';
+import Item from '../../../../../models/Item';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../../api/auth/[...nextauth]";
-import { rateLimiter } from '../../../../middleware/rateLimit';
-import { runMiddleware } from '../../../../lib/runMiddleware';
+import { authOptions } from "../../../auth/[...nextauth]";
+import { rateLimiter } from '../../../../../middleware/rateLimit';
+import { runMiddleware } from '../../../../../lib/runMiddleware';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import path from 'path';
 
 export default async function handler(req, res) {
   // Apply Rate Limiting
