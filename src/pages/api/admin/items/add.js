@@ -33,19 +33,41 @@ async function handler(req, res) {
   await runMiddleware(req, res, upload.single('image'));
 
   try {
-    const { name, description, affiliateLink, links, type, gender, price, style } = req.body;
+    const { name, description, type, gender, price, style, buyNowLinks } = req.body;
     const file = req.file;
 
     // Validate input
-    if (!name || !description || !affiliateLink || !links || !file || !type || !gender || !price || !style) {
+    if (!name || !description || !file || !type || !gender || !price || !style || !buyNowLinks) {
       return res.status(400).json({ success: false, message: 'All fields are required.' });
     }
 
-    // Parse links (assuming comma-separated)
-    const linksArray = links.split(',').map(link => link.trim()).filter(link => link);
+    // Parse buyNowLinks
+    let parsedLinks;
+    try {
+      parsedLinks = JSON.parse(buyNowLinks);
+    } catch (e) {
+      return res.status(400).json({ success: false, message: 'Invalid Buy Now links format.' });
+    }
 
-    if (linksArray.length === 0) {
-      return res.status(400).json({ success: false, message: 'At least one purchase link is required.' });
+    if (!Array.isArray(parsedLinks) || parsedLinks.length === 0 || parsedLinks.length > 4) {
+      return res.status(400).json({ success: false, message: 'Provide between 1 to 4 Buy Now links.' });
+    }
+
+    // Validate each Buy Now link
+    for (let i = 0; i < parsedLinks.length; i++) {
+      const link = parsedLinks[i];
+      if (!link.siteName || !link.url) {
+        return res.status(400).json({ success: false, message: `Buy Now link ${i + 1} is incomplete.` });
+      }
+      // Basic URL validation
+      const urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+        '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,})'+ // domain name
+        '(\\:\\d+)?(\\/[-a-zA-Z\\d%@_.~+&:]*)*'+ // port and path
+        '(\\?[;&a-zA-Z\\d%@_.,~+&:=-]*)?'+ // query string
+        '(\\#[-a-zA-Z\\d_]*)?$','i');
+      if (!urlPattern.test(link.url)) {
+        return res.status(400).json({ success: false, message: `Invalid URL format in Buy Now link ${i + 1}.` });
+      }
     }
 
     // Initialize S3 client for DigitalOcean Spaces
@@ -81,8 +103,7 @@ async function handler(req, res) {
       name,
       description,
       image: imageUrl,
-      links: linksArray,
-      affiliateLink,
+      buyNowLinks: parsedLinks,
       status: 'approved',
       type,
       gender,

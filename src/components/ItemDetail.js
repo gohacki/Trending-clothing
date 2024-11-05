@@ -1,4 +1,4 @@
-// src/pages/item/[id].js
+// src/components/ItemDetail.js
 
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { useState, useEffect } from "react";
@@ -184,15 +184,18 @@ function ItemDetailPage({ item }) {
           />
         </div>
         <p className="text-gray-300 mb-4">{votes} votes</p>
-        {/* Affiliate link */}
-        <a
-          href={item.affiliateLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-400 hover:text-blue-600 underline"
-        >
-          Buy Now
-        </a>
+        {/* Buy Now Links */}
+        {item.buyNowLinks && item.buyNowLinks.map((link, index) => (
+          <a
+            key={index}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-2 mr-2 transition-colors duration-200"
+          >
+            Buy Now at {link.siteName}
+          </a>
+        ))}
 
         {/* Vote Button */}
         <div className="mt-4">

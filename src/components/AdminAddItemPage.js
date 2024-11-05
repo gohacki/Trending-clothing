@@ -1,9 +1,8 @@
 // src/components/AdminAddItemPage.js
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 import Link from 'next/link';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,22 +15,27 @@ function AdminAddItemPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    affiliateLink: '',
-    links: '',
     image: null,
     type: 'Shirt', // Default value
     gender: 'Unisex', // Default value
     price: 'Under $50', // Default value
     style: 'Casual', // Default value
+    buyNowLinks: [{ siteName: '', url: '' }], // Initialize with one empty link
   });
 
   const [error, setError] = useState('');
+  const imageInputRef = useRef(null); // Ref for the image input
 
-  const { name, description, affiliateLink, links, image, type, gender, price, style } = formData;
+  const { name, description, type, gender, price, style, buyNowLinks } = formData;
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === 'image') {
+    if (name.startsWith('buyNowLinks')) {
+      const [_, index, field] = name.split('-'); // e.g., buyNowLinks-0-siteName
+      const updatedLinks = [...buyNowLinks];
+      updatedLinks[index][field] = value;
+      setFormData({ ...formData, buyNowLinks: updatedLinks });
+    } else if (name === 'image') {
       setFormData({ ...formData, image: files[0] });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -39,26 +43,61 @@ function AdminAddItemPage() {
     setError('');
   };
 
+  const addBuyNowLink = () => {
+    if (buyNowLinks.length >= 4) return;
+    setFormData({
+      ...formData,
+      buyNowLinks: [...buyNowLinks, { siteName: '', url: '' }],
+    });
+  };
+
+  const removeBuyNowLink = (index) => {
+    const updatedLinks = buyNowLinks.filter((_, i) => i !== index);
+    setFormData({ ...formData, buyNowLinks: updatedLinks });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Front-end validation
-    if (!name || !description || !affiliateLink || !links || !image || !type || !gender || !price || !style) {
+    if (!name || !description || !formData.image || !type || !gender || !price || !style) {
       setError('All fields are required.');
       toast.error('All fields are required.');
       return;
     }
 
+    // Validate Buy Now Links
+    for (let i = 0; i < buyNowLinks.length; i++) {
+      const link = buyNowLinks[i];
+      if (!link.siteName || !link.url) {
+        setError(`All Buy Now links must have a site name and URL.`);
+        toast.error(`All Buy Now links must have a site name and URL.`);
+        return;
+      }
+      // Basic URL validation
+      const urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+        '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,})'+ // domain name
+        '(\\:\\d+)?(\\/[-a-zA-Z\\d%@_.~+&:]*)*'+ // port and path
+        '(\\?[;&a-zA-Z\\d%@_.,~+&:=-]*)?'+ // query string
+        '(\\#[-a-zA-Z\\d_]*)?$','i');
+      if (!urlPattern.test(link.url)) {
+        setError(`Invalid URL format in Buy Now link ${i + 1}.`);
+        toast.error(`Invalid URL format in Buy Now link ${i + 1}.`);
+        return;
+      }
+    }
+
+    // Prepare form data
     const form = new FormData();
     form.append('name', name);
     form.append('description', description);
-    form.append('affiliateLink', affiliateLink);
-    form.append('links', links); // Comma-separated URLs
-    form.append('image', image);
     form.append('type', type);
     form.append('gender', gender);
     form.append('price', price);
     form.append('style', style);
+    form.append('image', formData.image);
+    // Append buyNowLinks as JSON string
+    form.append('buyNowLinks', JSON.stringify(buyNowLinks));
 
     try {
       const res = await fetch('/api/admin/items/add', {
@@ -77,14 +116,17 @@ function AdminAddItemPage() {
         setFormData({
           name: '',
           description: '',
-          affiliateLink: '',
-          links: '',
           image: null,
           type: 'Shirt',
           gender: 'Unisex',
           price: 'Under $50',
           style: 'Casual',
+          buyNowLinks: [{ siteName: '', url: '' }],
         });
+        // Clear the file input
+        if (imageInputRef.current) {
+          imageInputRef.current.value = null;
+        }
         // Redirect after a short delay
         setTimeout(() => {
           router.push('/admin/submissions');
@@ -128,9 +170,6 @@ function AdminAddItemPage() {
 
   return (
     <>
-      <Head>
-        <title>Add Item | Trending Clothing</title>
-      </Head>
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
         <div className="bg-white dark:bg-gray-800 bg-opacity-80 dark:bg-opacity-80 backdrop-filter backdrop-blur-md p-8 rounded-lg shadow-lg w-full max-w-lg transition-colors duration-300">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center transition-colors duration-300">Add a New Item</h2>
@@ -170,38 +209,69 @@ function AdminAddItemPage() {
               ></textarea>
             </div>
 
-            {/* Affiliate Link */}
-            <div className="mb-4">
-              <label htmlFor="affiliateLink" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Affiliate Link
+            {/* Image Upload */}
+            <div className="mb-6">
+              <label htmlFor="image" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
+                Item Image
               </label>
               <input
-                type="url"
-                name="affiliateLink"
-                id="affiliateLink"
-                value={affiliateLink}
+                type="file"
+                name="image"
+                id="image"
+                accept="image/*"
                 onChange={handleChange}
+                ref={imageInputRef} // Attach ref to clear input later
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
-                placeholder="https://www.example.com/product"
                 required
               />
             </div>
 
-            {/* Purchase Links */}
-            <div className="mb-4">
-              <label htmlFor="links" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Purchase Links (comma-separated)
+            {/* Buy Now Links */}
+            <div className="mb-6">
+              <label className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
+                Buy Now Links (Up to 4)
               </label>
-              <input
-                type="text"
-                name="links"
-                id="links"
-                value={links}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
-                placeholder="https://store1.com/item, https://store2.com/item"
-                required
-              />
+              {buyNowLinks.map((link, index) => (
+                <div key={index} className="flex items-center mb-2">
+                  <input
+                    type="text"
+                    name={`buyNowLinks-${index}-siteName`}
+                    value={link.siteName}
+                    onChange={handleChange}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
+                    placeholder="Site Name"
+                    required
+                  />
+                  <input
+                    type="url"
+                    name={`buyNowLinks-${index}-url`}
+                    value={link.url}
+                    onChange={handleChange}
+                    className="flex-1 px-4 py-2 border-t border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
+                    placeholder="https://example.com/product"
+                    required
+                  />
+                  {buyNowLinks.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeBuyNowLink(index)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-r-lg"
+                      aria-label={`Remove Buy Now link ${index + 1}`}
+                    >
+                      &times;
+                    </button>
+                  )}
+                </div>
+              ))}
+              {buyNowLinks.length < 4 && (
+                <button
+                  type="button"
+                  onClick={addBuyNowLink}
+                  className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
+                >
+                  Add Buy Now Link
+                </button>
+              )}
             </div>
 
             {/* Type of Clothing */}
@@ -283,22 +353,6 @@ function AdminAddItemPage() {
                 <option value="Vintage">Vintage</option>
                 <option value="Streetwear">Streetwear</option>
               </select>
-            </div>
-
-            {/* Image Upload */}
-            <div className="mb-6">
-              <label htmlFor="image" className="block text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-300">
-                Item Image
-              </label>
-              <input
-                type="file"
-                name="image"
-                id="image"
-                accept="image/*"
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 transition-colors duration-300"
-                required
-              />
             </div>
 
             {/* Submit Button */}

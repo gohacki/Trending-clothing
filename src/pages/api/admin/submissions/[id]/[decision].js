@@ -38,21 +38,35 @@ export default withAdmin(async function handler(req, res) {
     }
 
     if (decision === 'approve') {
-      const { affiliateLink, type, gender, price, style } = req.body;
+      const { buyNowLinks, type, gender, price, style } = req.body;
 
-      if (!affiliateLink || !type || !gender || !price || !style) {
-        return res.status(400).json({ success: false, message: 'All fields are required to approve the item.' });
+      // Parse buyNowLinks
+      let parsedLinks;
+      try {
+        parsedLinks = JSON.parse(buyNowLinks);
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid Buy Now links format.' });
       }
 
-      // Validate affiliateLink (basic URL validation)
-      const urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
-        '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,})'+ // domain name
-        '(\\:\\d+)?(\\/[-a-zA-Z\\d%@_.~+&:]*)*'+ // port and path
-        '(\\?[;&a-zA-Z\\d%@_.,~+&:=-]*)?'+ // query string
-        '(\\#[-a-zA-Z\\d_]*)?$','i');
-      
-      if (!urlPattern.test(affiliateLink)) {
-        return res.status(400).json({ success: false, message: 'Invalid affiliate link URL.' });
+      if (!Array.isArray(parsedLinks) || parsedLinks.length === 0 || parsedLinks.length > 4) {
+        return res.status(400).json({ success: false, message: 'Provide between 1 to 4 Buy Now links.' });
+      }
+
+      // Validate each Buy Now link
+      for (let i = 0; i < parsedLinks.length; i++) {
+        const link = parsedLinks[i];
+        if (!link.siteName || !link.url) {
+          return res.status(400).json({ success: false, message: `Buy Now link ${i + 1} is incomplete.` });
+        }
+        // Basic URL validation
+        const urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+          '((([a-zA-Z\\d]([a-zA-Z\\d-]*[a-zA-Z\\d])*)\\.)+[a-zA-Z]{2,})'+ // domain name
+          '(\\:\\d+)?(\\/[-a-zA-Z\\d%@_.~+&:]*)*'+ // port and path
+          '(\\?[;&a-zA-Z\\d%@_.,~+&:=-]*)?'+ // query string
+          '(\\#[-a-zA-Z\\d_]*)?$','i');
+        if (!urlPattern.test(link.url)) {
+          return res.status(400).json({ success: false, message: `Invalid URL format in Buy Now link ${i + 1}.` });
+        }
       }
 
       // Validate enumerated fields
@@ -78,7 +92,7 @@ export default withAdmin(async function handler(req, res) {
       }
 
       // Update item fields
-      item.affiliateLink = affiliateLink;
+      item.buyNowLinks = parsedLinks;
       item.type = type;
       item.gender = gender;
       item.price = price;

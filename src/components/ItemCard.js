@@ -193,15 +193,18 @@ function ItemCard({ item, searchTerm, wardrobeIds, rank }) { // Added 'rank' pro
               <span className="ml-3 text-lg text-gray-700 dark:text-gray-300">{votes} votes</span>
             </div>
 
-            {/* Buy Now Button */}
-            <a
-              href={item.affiliateLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
-            >
-              Buy Now
-            </a>
+            {/* Buy Now Buttons */}
+            {item.buyNowLinks && item.buyNowLinks.map((link, index) => (
+              <a
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                Buy Now at {link.siteName}
+              </a>
+            ))}
 
             {/* Wardrobe Button */}
             <button

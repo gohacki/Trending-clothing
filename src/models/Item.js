@@ -2,6 +2,26 @@
 
 import mongoose from 'mongoose';
 
+const BuyNowLinkSchema = new mongoose.Schema({
+  siteName: {
+    type: String,
+    required: [true, 'Site name is required.'],
+    trim: true,
+  },
+  url: {
+    type: String,
+    required: [true, 'URL is required.'],
+    trim: true,
+    validate: {
+      validator: function(v) {
+        // Basic URL validation
+        return /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-]*)*\/?$/.test(v);
+      },
+      message: props => `${props.value} is not a valid URL!`
+    }
+  }
+}, { _id: false }); // Disable _id for subdocuments
+
 const ItemSchema = new mongoose.Schema(
   {
     name: {
@@ -19,30 +39,26 @@ const ItemSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please provide an image URL for the item.'],
     },
-    links: {
-      type: [String],
-      required: [true, 'Please provide at least one purchase link.'],
+    buyNowLinks: {
+      type: [BuyNowLinkSchema],
       validate: {
-        validator: function (v) {
-          return v.length > 0;
+        validator: function(v) {
+          return v.length <= 4;
         },
-        message: 'At least one purchase link is required.',
+        message: 'You can add up to 4 Buy Now links.'
       },
+      required: [true, 'Please provide at least one Buy Now link.'],
     },
     votes: {
       type: Number,
       default: 0,
-    },
-    affiliateLink: {
-      type: String,
-      // affiliateLink is now optional for user submissions
     },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
-    // **New Fields**
+    // Existing Fields
     type: {
       type: String,
       enum: ['Shirt', 'Pants', 'Jacket', 'Dress', 'Shoes', 'Accessories'],
